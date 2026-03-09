@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Editor from "@/components/Editor";
 import EmptyState from "@/components/EmptyState";
@@ -46,9 +46,17 @@ export default function Home() {
     setHydrated(true);
   }, []);
 
-  // Persist on every change
+  // Persist on change, debounced to avoid a write on every keystroke
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (hydrated) saveEntries(entries);
+    if (!hydrated) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveEntries(entries);
+    }, 500);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
   }, [entries, hydrated]);
 
   useEffect(() => {
@@ -68,21 +76,18 @@ export default function Home() {
     setActiveId(id);
   }, []);
 
-  const handleDelete = useCallback(
-    (id: string) => {
-      setEntries((prev) => {
-        const next = prev.filter((e) => e.id !== id);
-        return next;
+  const handleDelete = useCallback((id: string) => {
+    setEntries((prev) => {
+      const next = prev.filter((e) => e.id !== id);
+      // Update activeId inside the updater so we use the freshly-computed
+      // `next` array rather than a potentially-stale closure over `entries`.
+      setActiveId((currentActiveId) => {
+        if (currentActiveId !== id) return currentActiveId;
+        return next.length > 0 ? next[0].id : null;
       });
-      setActiveId((prev) => {
-        if (prev !== id) return prev;
-        // Select the next available entry
-        const remaining = entries.filter((e) => e.id !== id);
-        return remaining.length > 0 ? remaining[0].id : null;
-      });
-    },
-    [entries]
-  );
+      return next;
+    });
+  }, []);
 
   const handleChange = useCallback((content: string) => {
     // Enforce per-entry size limit to prevent localStorage exhaustion
