@@ -8,7 +8,6 @@ import {
   loadEntries,
   saveEntries,
   createEntry,
-  deriveTitleFromContent,
 } from "@/lib/storage";
 import { JournalEntry } from "@/types";
 
@@ -64,14 +63,16 @@ export default function Home() {
     const now = new Date().toISOString();
     setEntries((prev) =>
       prev.map((e) =>
-        e.id === activeId
-          ? {
-              ...e,
-              content,
-              title: deriveTitleFromContent(content),
-              updatedAt: now,
-            }
-          : e
+        e.id === activeId ? { ...e, content, updatedAt: now } : e
+      )
+    );
+  }, [activeId]);
+
+  const handleTitleChange = useCallback((title: string) => {
+    const now = new Date().toISOString();
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === activeId ? { ...e, title, updatedAt: now } : e
       )
     );
   }, [activeId]);
@@ -96,7 +97,7 @@ export default function Home() {
         onDelete={handleDelete}
       />
       {activeEntry ? (
-        <Editor entry={activeEntry} onChange={handleChange} />
+        <Editor entry={activeEntry} onChange={handleChange} onTitleChange={handleTitleChange} />
       ) : (
         <EmptyState onNew={handleNew} />
       )}

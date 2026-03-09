@@ -1,7 +1,7 @@
 "use client";
 
 import { JournalEntry } from "@/types";
-import { formatDate, deriveTitleFromContent } from "@/lib/storage";
+import { formatDate } from "@/lib/storage";
 
 interface SidebarProps {
   entries: JournalEntry[];
@@ -56,11 +56,10 @@ export default function Sidebar({
         ) : (
           <ul className="space-y-1">
             {entries.map((entry) => {
-              const title = deriveTitleFromContent(entry.content);
+              const title = entry.title || "Untitled";
               const preview = entry.content
                 .split("\n")
                 .filter((l) => l.trim())
-                .slice(1)
                 .join(" ")
                 .replace(/#{1,6}\s/g, "")
                 .replace(/[*_`~]/g, "")

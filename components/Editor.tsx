@@ -9,11 +9,12 @@ import { formatDate, formatTime } from "@/lib/storage";
 interface EditorProps {
   entry: JournalEntry;
   onChange: (content: string) => void;
+  onTitleChange: (title: string) => void;
 }
 
 type ViewMode = "write" | "preview" | "split";
 
-export default function Editor({ entry, onChange }: EditorProps) {
+export default function Editor({ entry, onChange, onTitleChange }: EditorProps) {
   const [mode, setMode] = useState<ViewMode>("split");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -66,6 +67,17 @@ export default function Editor({ entry, onChange }: EditorProps) {
             {formatDate(entry.updatedAt)} at {formatTime(entry.updatedAt)}
           </span>
         </div>
+      </div>
+
+      {/* Title input */}
+      <div className="px-8 pt-6 pb-2 border-b border-stone-100">
+        <input
+          type="text"
+          value={entry.title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Untitled"
+          className="w-full text-2xl font-semibold text-stone-800 placeholder:text-stone-300 bg-transparent outline-none"
+        />
       </div>
 
       {/* Content area */}
