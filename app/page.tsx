@@ -100,6 +100,17 @@ export default function Home() {
     );
   }, [activeId]);
 
+  const handleTitleChange = useCallback((title: string) => {
+    const now = new Date().toISOString();
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === activeId
+          ? { ...e, title, updatedAt: now }
+          : e
+      )
+    );
+  }, [activeId]);
+
   const handleColorChange = useCallback((id: string, color: ColorCode) => {
     setEntries((prev) =>
       prev.map((e) =>
@@ -190,7 +201,7 @@ export default function Home() {
         onMoveEntry={handleMoveEntry}
       />
       {activeEntry ? (
-        <Editor entry={activeEntry} onChange={handleChange} />
+        <Editor entry={activeEntry} onChange={handleChange} onTitleChange={handleTitleChange} />
       ) : (
         <EmptyState onNew={handleNew} />
       )}

@@ -43,7 +43,6 @@ export default function Sidebar({
   );
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
   const [renamingFolderName, setRenamingFolderName] = useState("");
-  const [moveDropdown, setMoveDropdown] = useState<string | null>(null);
 
   const handleCreateFolder = useCallback(() => {
     if (newFolderName.trim()) {
@@ -227,8 +226,6 @@ export default function Sidebar({
                                     onMoveEntry(entry.id, targetFolderId)
                                   }
                                   folders={folders}
-                                  moveDropdown={moveDropdown}
-                                  setMoveDropdown={setMoveDropdown}
                                 />
                               ))
                           )}
@@ -264,8 +261,6 @@ export default function Sidebar({
                           onMoveEntry(entry.id, targetFolderId)
                         }
                         folders={folders}
-                        moveDropdown={moveDropdown}
-                        setMoveDropdown={setMoveDropdown}
                       />
                     ))}
                 </div>
@@ -327,8 +322,6 @@ interface EntryItemProps {
   onDelete: () => void;
   onMove: (folderId: string | null) => void;
   folders: Folder[];
-  moveDropdown: string | null;
-  setMoveDropdown: (id: string | null) => void;
 }
 
 function EntryItem({
@@ -338,10 +331,10 @@ function EntryItem({
   onDelete,
   onMove,
   folders,
-  moveDropdown,
-  setMoveDropdown,
 }: EntryItemProps) {
-  const title = entry.title || "Untitled";
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
+
+  const title = deriveTitleFromContent(entry.content);
   const preview = entry.content
     .split("\n")
     .filter((l) => l.trim())
@@ -351,89 +344,110 @@ function EntryItem({
     .slice(0, 80);
 
   return (
-    <div className="group relative">
-      <button
-        onClick={onSelect}
-        className={`w-full text-left rounded-lg px-3 py-3 transition-colors ${
+    <div className="group">
+      {/* Entry card */}
+      <div
+        className={`rounded-lg transition-colors ${
           isActive
-            ? "bg-white shadow-sm border border-stone-200 text-stone-900"
-            : "hover:bg-stone-100 text-stone-700"
+            ? "bg-white shadow-sm border border-stone-200"
+            : "hover:bg-stone-100"
         }`}
       >
-        <p
-          className={`text-sm font-medium truncate ${
-            isActive ? "text-stone-900" : "text-stone-700"
-          }`}
-        >
-          {title}
-        </p>
-        {preview && (
-          <p className="text-xs text-stone-400 mt-0.5 truncate leading-relaxed">
-            {preview}
-          </p>
-        )}
-        <p className="text-xs text-stone-300 mt-1">
-          {formatDate(entry.updatedAt)}
-        </p>
-      </button>
-
-      {/* Entry actions */}
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-        <div className="relative">
+        {/* Title row with action buttons */}
+        <div className="flex items-start gap-1 px-3 pt-3 pb-0">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setMoveDropdown(moveDropdown === entry.id ? null : entry.id);
-            }}
-            className="p-1.5 text-stone-300 hover:text-stone-600 hover:bg-stone-100 rounded transition-colors"
-            title="Move to folder"
+            onClick={onSelect}
+            className="flex-1 text-left min-w-0"
           >
-            <FolderMoveIcon />
+            <p
+              className={`text-sm font-medium truncate ${
+                isActive ? "text-stone-900" : "text-stone-700"
+              }`}
+            >
+              {title}
+            </p>
           </button>
-
-          {/* Move dropdown */}
-          {moveDropdown === entry.id && (
-            <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-stone-200 z-10">
-              <button
-                onClick={() => {
-                  onMove(null);
-                  setMoveDropdown(null);
-                }}
-                className={`w-full text-left px-3 py-2 text-xs hover:bg-stone-100 transition-colors ${
-                  !entry.folderId ? "bg-stone-50 font-medium" : ""
-                }`}
-              >
-                Other
-              </button>
-              {folders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => {
-                    onMove(folder.id);
-                    setMoveDropdown(null);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-stone-100 transition-colors ${
-                    entry.folderId === folder.id ? "bg-stone-50 font-medium" : ""
-                  }`}
-                >
-                  {folder.name}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Actions: shown on hover or when move menu is open */}
+          <div
+            className={`flex gap-0.5 flex-shrink-0 pt-0.5 transition-opacity ${
+              showMoveMenu ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMoveMenu((v) => !v);
+              }}
+              className={`p-1 rounded transition-colors ${
+                showMoveMenu
+                  ? "bg-stone-200 text-stone-700"
+                  : "text-stone-300 hover:text-stone-600 hover:bg-stone-200"
+              }`}
+              title="Move to folder"
+            >
+              <FolderMoveIcon />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="p-1 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded transition-colors"
+              title="Delete entry"
+            >
+              <TrashIcon />
+            </button>
+          </div>
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-1.5 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded transition-colors"
-          title="Delete entry"
-        >
-          <TrashIcon />
+        {/* Preview + date row */}
+        <button onClick={onSelect} className="w-full text-left px-3 pb-3">
+          {preview && (
+            <p className="text-xs text-stone-400 mt-0.5 truncate leading-relaxed">
+              {preview}
+            </p>
+          )}
+          <p className="text-xs text-stone-300 mt-1">
+            {formatDate(entry.updatedAt)}
+          </p>
         </button>
       </div>
+
+      {/* Inline folder picker — no overflow/z-index issues */}
+      {showMoveMenu && (
+        <div className="mt-1 mb-1 rounded-lg border border-stone-200 bg-white shadow-sm overflow-hidden">
+          <p className="px-3 py-1.5 text-xs font-medium text-stone-400 border-b border-stone-100 select-none">
+            Move to
+          </p>
+          <button
+            onClick={() => {
+              onMove(null);
+              setShowMoveMenu(false);
+            }}
+            className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-stone-50 ${
+              !entry.folderId ? "font-semibold text-stone-800" : "text-stone-600"
+            }`}
+          >
+            Other (no folder)
+          </button>
+          {folders.map((folder) => (
+            <button
+              key={folder.id}
+              onClick={() => {
+                onMove(folder.id);
+                setShowMoveMenu(false);
+              }}
+              className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-stone-50 ${
+                entry.folderId === folder.id
+                  ? "font-semibold text-stone-800"
+                  : "text-stone-600"
+              }`}
+            >
+              {folder.name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
