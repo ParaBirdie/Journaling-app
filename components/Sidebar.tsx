@@ -1,7 +1,7 @@
 "use client";
 
 import { JournalEntry, Folder } from "@/types";
-import { formatDate, deriveTitleFromContent } from "@/lib/storage";
+import { formatDate } from "@/lib/storage";
 import { useState, useCallback } from "react";
 
 interface SidebarProps {
@@ -339,7 +339,7 @@ function EntryItem({
   moveDropdown,
   setMoveDropdown,
 }: EntryItemProps) {
-  const title = deriveTitleFromContent(entry.content);
+  const title = entry.title || "Untitled";
   const preview = entry.content
     .split("\n")
     .filter((l) => l.trim())

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JournalEntry } from "@/types";
@@ -31,12 +31,17 @@ export default function Editor({ entry, onChange }: EditorProps) {
     [onChange]
   );
 
-  const wordCount = entry.content
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
+  const wordCount = useMemo(
+    () => entry.content.trim().split(/\s+/).filter(Boolean).length,
+    [entry.content]
+  );
 
   const charCount = entry.content.length;
+
+  const formattedDate = useMemo(() => formatDate(entry.updatedAt), [entry.updatedAt]);
+  const formattedTime = useMemo(() => formatTime(entry.updatedAt), [entry.updatedAt]);
+
+  const todayTitle = useMemo(() => getTodayTitle(), []);
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0 bg-white">
@@ -63,7 +68,7 @@ export default function Editor({ entry, onChange }: EditorProps) {
             {wordCount} {wordCount === 1 ? "word" : "words"} · {charCount} chars
           </span>
           <span className="text-xs text-stone-300 select-none hidden md:block">
-            {formatDate(entry.updatedAt)} at {formatTime(entry.updatedAt)}
+            {formattedDate} at {formattedTime}
           </span>
         </div>
       </div>
@@ -83,7 +88,7 @@ export default function Editor({ entry, onChange }: EditorProps) {
               ref={textareaRef}
               value={entry.content}
               onChange={handleChange}
-              placeholder={`# ${getTodayTitle()}\n\nStart writing…`}
+              placeholder={`# ${todayTitle}\n\nStart writing…`}
               className="editor-textarea flex-1 px-8 py-8"
               spellCheck
             />
