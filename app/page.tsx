@@ -9,6 +9,7 @@ import {
   saveEntries,
   createEntry,
   deriveTitleFromContent,
+  MAX_CONTENT_LENGTH,
   loadFolders,
   saveFolders,
   createFolder,
@@ -27,10 +28,15 @@ export default function Home() {
   // Load from localStorage once on mount
   useEffect(() => {
     const saved = loadEntries();
-    // Sort newest first
-    saved.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
+    // Sort newest first; guard against NaN from invalid date strings
+    saved.sort((a, b) => {
+      const ta = new Date(a.updatedAt).getTime();
+      const tb = new Date(b.updatedAt).getTime();
+      if (isNaN(ta) && isNaN(tb)) return 0;
+      if (isNaN(ta)) return 1;
+      if (isNaN(tb)) return -1;
+      return tb - ta;
+    });
     setEntries(saved);
     if (saved.length > 0) setActiveId(saved[0].id);
 
@@ -79,6 +85,8 @@ export default function Home() {
   );
 
   const handleChange = useCallback((content: string) => {
+    // Enforce per-entry size limit to prevent localStorage exhaustion
+    if (content.length > MAX_CONTENT_LENGTH) return;
     const now = new Date().toISOString();
     setEntries((prev) =>
       prev.map((e) =>
