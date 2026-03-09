@@ -1,7 +1,23 @@
-import { JournalEntry, Folder } from "@/types";
+import { JournalEntry, ColorCode, Folder } from "@/types";
 
 const STORAGE_KEY = "journal_entries";
 const FOLDERS_STORAGE_KEY = "journal_folders";
+
+export const COLOR_PALETTE: { color: ColorCode; label: string; bg: string; ring: string }[] = [
+  { color: "red", label: "Red", bg: "bg-red-200", ring: "ring-red-400" },
+  { color: "orange", label: "Orange", bg: "bg-orange-200", ring: "ring-orange-400" },
+  { color: "yellow", label: "Yellow", bg: "bg-yellow-200", ring: "ring-yellow-400" },
+  { color: "green", label: "Green", bg: "bg-green-200", ring: "ring-green-400" },
+  { color: "blue", label: "Blue", bg: "bg-blue-200", ring: "ring-blue-400" },
+  { color: "purple", label: "Purple", bg: "bg-purple-200", ring: "ring-purple-400" },
+  { color: "pink", label: "Pink", bg: "bg-pink-200", ring: "ring-pink-400" },
+  { color: "gray", label: "Gray", bg: "bg-gray-200", ring: "ring-gray-400" },
+];
+
+export function getColorClasses(color: ColorCode): { bg: string; ring: string } {
+  const colorDef = COLOR_PALETTE.find((c) => c.color === color);
+  return colorDef ? { bg: colorDef.bg, ring: colorDef.ring } : { bg: "bg-gray-200", ring: "ring-gray-400" };
+}
 
 export function loadEntries(): JournalEntry[] {
   if (typeof window === "undefined") return [];
@@ -25,6 +41,7 @@ export function createEntry(): JournalEntry {
     id: crypto.randomUUID(),
     title: "",
     content: "",
+    color: "gray",
     createdAt: now,
     updatedAt: now,
   };

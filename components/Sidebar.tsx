@@ -1,8 +1,8 @@
 "use client";
 
-import { JournalEntry, Folder } from "@/types";
-import { formatDate } from "@/lib/storage";
 import { useState, useCallback } from "react";
+import { JournalEntry, ColorCode, Folder } from "@/types";
+import { formatDate, deriveTitleFromContent, COLOR_PALETTE, getColorClasses } from "@/lib/storage";
 
 interface SidebarProps {
   entries: JournalEntry[];
@@ -12,6 +12,7 @@ interface SidebarProps {
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onColorChange: (id: string, color: ColorCode) => void;
   onCreateFolder: (name: string) => void;
   onDeleteFolder: (id: string) => void;
   onRenameFolder: (id: string, newName: string) => void;
@@ -27,12 +28,14 @@ export default function Sidebar({
   onSelect,
   onNew,
   onDelete,
+  onColorChange,
   onCreateFolder,
   onDeleteFolder,
   onRenameFolder,
   onSelectFolder,
   onMoveEntry,
 }: SidebarProps) {
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
@@ -75,7 +78,6 @@ export default function Sidebar({
 
   const rootEntries = entries.filter((e) => !e.folderId);
   const totalEntries = entries.length;
-
   return (
     <aside className="w-64 flex-shrink-0 flex flex-col h-full bg-stone-50 border-r border-stone-200">
       {/* Header */}
