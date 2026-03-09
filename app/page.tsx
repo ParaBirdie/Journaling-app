@@ -8,13 +8,14 @@ import {
   loadEntries,
   saveEntries,
   createEntry,
+  deriveTitleFromContent,
   loadFolders,
   saveFolders,
   createFolder,
   deleteFolder,
   renameFolder,
 } from "@/lib/storage";
-import { JournalEntry, Folder } from "@/types";
+import { JournalEntry, ColorCode, Folder } from "@/types";
 
 export default function Home() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -81,19 +82,24 @@ export default function Home() {
     const now = new Date().toISOString();
     setEntries((prev) =>
       prev.map((e) =>
-        e.id === activeId ? { ...e, content, updatedAt: now } : e
+        e.id === activeId ? { ...e, content, title: deriveTitleFromContent(content), updatedAt: now } : e
       )
     );
   }, [activeId]);
 
-  const handleTitleChange = useCallback((title: string) => {
-    const now = new Date().toISOString();
+  const handleColorChange = useCallback((id: string, color: ColorCode) => {
     setEntries((prev) =>
       prev.map((e) =>
-        e.id === activeId ? { ...e, title, updatedAt: now } : e
+        e.id === id
+          ? {
+              ...e,
+              color,
+              updatedAt: new Date().toISOString(),
+            }
+          : e
       )
     );
-  }, [activeId]);
+  }, []);
 
   const handleCreateFolder = useCallback((folderName: string) => {
     const folder = createFolder(folderName);
@@ -163,6 +169,7 @@ export default function Home() {
         onSelect={handleSelect}
         onNew={handleNew}
         onDelete={handleDelete}
+        onColorChange={handleColorChange}
         onCreateFolder={handleCreateFolder}
         onDeleteFolder={handleDeleteFolder}
         onRenameFolder={handleRenameFolder}
@@ -170,7 +177,7 @@ export default function Home() {
         onMoveEntry={handleMoveEntry}
       />
       {activeEntry ? (
-        <Editor entry={activeEntry} onChange={handleChange} onTitleChange={handleTitleChange} />
+        <Editor entry={activeEntry} onChange={handleChange} />
       ) : (
         <EmptyState onNew={handleNew} />
       )}
