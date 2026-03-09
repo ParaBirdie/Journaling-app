@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { JournalEntry, ColorCode, Folder } from "@/types";
 import { formatDate, deriveTitleFromContent, COLOR_PALETTE, getColorClasses } from "@/lib/storage";
+import EntryItem from "@/components/EntryItem";
 
 interface SidebarProps {
   entries: JournalEntry[];
@@ -226,6 +227,9 @@ export default function Sidebar({
                                   onMove={(targetFolderId) =>
                                     onMoveEntry(entry.id, targetFolderId)
                                   }
+                                  onColorChange={(color) =>
+                                    onColorChange(entry.id, color)
+                                  }
                                   folders={folders}
                                   moveDropdown={moveDropdown}
                                   setMoveDropdown={setMoveDropdown}
@@ -262,6 +266,9 @@ export default function Sidebar({
                         onDelete={() => onDelete(entry.id)}
                         onMove={(targetFolderId) =>
                           onMoveEntry(entry.id, targetFolderId)
+                        }
+                        onColorChange={(color) =>
+                          onColorChange(entry.id, color)
                         }
                         folders={folders}
                         moveDropdown={moveDropdown}
