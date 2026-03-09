@@ -9,13 +9,14 @@ import {
   saveEntries,
   createEntry,
   deriveTitleFromContent,
+  MAX_CONTENT_LENGTH,
   loadFolders,
   saveFolders,
   createFolder,
   deleteFolder,
   renameFolder,
 } from "@/lib/storage";
-import { JournalEntry, Folder } from "@/types";
+import { JournalEntry, ColorCode, Folder } from "@/types";
 
 export default function Home() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -27,10 +28,15 @@ export default function Home() {
   // Load from localStorage once on mount
   useEffect(() => {
     const saved = loadEntries();
-    // Sort newest first
-    saved.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
+    // Sort newest first; guard against NaN from invalid date strings
+    saved.sort((a, b) => {
+      const ta = new Date(a.updatedAt).getTime();
+      const tb = new Date(b.updatedAt).getTime();
+      if (isNaN(ta) && isNaN(tb)) return 0;
+      if (isNaN(ta)) return 1;
+      if (isNaN(tb)) return -1;
+      return tb - ta;
+    });
     setEntries(saved);
     if (saved.length > 0) setActiveId(saved[0].id);
 
@@ -84,20 +90,29 @@ export default function Home() {
   }, []);
 
   const handleChange = useCallback((content: string) => {
+    // Enforce per-entry size limit to prevent localStorage exhaustion
+    if (content.length > MAX_CONTENT_LENGTH) return;
     const now = new Date().toISOString();
     setEntries((prev) =>
       prev.map((e) =>
-        e.id === activeId
+        e.id === activeId ? { ...e, content, title: deriveTitleFromContent(content), updatedAt: now } : e
+      )
+    );
+  }, [activeId]);
+
+  const handleColorChange = useCallback((id: string, color: ColorCode) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === id
           ? {
               ...e,
-              content,
-              title: deriveTitleFromContent(content),
-              updatedAt: now,
+              color,
+              updatedAt: new Date().toISOString(),
             }
           : e
       )
     );
-  }, [activeId]);
+  }, []);
 
   const handleCreateFolder = useCallback((folderName: string) => {
     const folder = createFolder(folderName);
@@ -167,6 +182,7 @@ export default function Home() {
         onSelect={handleSelect}
         onNew={handleNew}
         onDelete={handleDelete}
+        onColorChange={handleColorChange}
         onCreateFolder={handleCreateFolder}
         onDeleteFolder={handleDeleteFolder}
         onRenameFolder={handleRenameFolder}

@@ -1,14 +1,64 @@
-import { JournalEntry, Folder } from "@/types";
+import { JournalEntry, ColorCode, Folder } from "@/types";
 
 const STORAGE_KEY = "journal_entries";
 const FOLDERS_STORAGE_KEY = "journal_folders";
+
+export const COLOR_PALETTE: { color: ColorCode; label: string; bg: string; ring: string }[] = [
+  { color: "red", label: "Red", bg: "bg-red-200", ring: "ring-red-400" },
+  { color: "orange", label: "Orange", bg: "bg-orange-200", ring: "ring-orange-400" },
+  { color: "yellow", label: "Yellow", bg: "bg-yellow-200", ring: "ring-yellow-400" },
+  { color: "green", label: "Green", bg: "bg-green-200", ring: "ring-green-400" },
+  { color: "blue", label: "Blue", bg: "bg-blue-200", ring: "ring-blue-400" },
+  { color: "purple", label: "Purple", bg: "bg-purple-200", ring: "ring-purple-400" },
+  { color: "pink", label: "Pink", bg: "bg-pink-200", ring: "ring-pink-400" },
+  { color: "gray", label: "Gray", bg: "bg-gray-200", ring: "ring-gray-400" },
+];
+
+export function getColorClasses(color: ColorCode): { bg: string; ring: string } {
+  const colorDef = COLOR_PALETTE.find((c) => c.color === color);
+  return colorDef ? { bg: colorDef.bg, ring: colorDef.ring } : { bg: "bg-gray-200", ring: "ring-gray-400" };
+}
+
+// Maximum allowed content size per entry (200 KB)
+export const MAX_CONTENT_LENGTH = 200_000;
+// Maximum number of entries stored
+const MAX_ENTRIES = 1_000;
+
+function isValidISOString(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const d = new Date(value);
+  return !isNaN(d.getTime());
+}
+
+/**
+ * Runtime type guard for a JournalEntry.
+ * Prevents tampered or malformed localStorage data from propagating into app state.
+ */
+function isValidEntry(value: unknown): value is JournalEntry {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const e = value as Record<string, unknown>;
+  return (
+    typeof e.id === "string" &&
+    e.id.length > 0 &&
+    e.id.length <= 128 &&
+    typeof e.title === "string" &&
+    e.title.length <= 500 &&
+    typeof e.content === "string" &&
+    e.content.length <= MAX_CONTENT_LENGTH &&
+    isValidISOString(e.createdAt) &&
+    isValidISOString(e.updatedAt)
+  );
+}
 
 export function loadEntries(): JournalEntry[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as JournalEntry[];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Validate each entry and cap total count to guard against bloated storage
+    return parsed.filter(isValidEntry).slice(0, MAX_ENTRIES);
   } catch {
     return [];
   }
@@ -25,6 +75,7 @@ export function createEntry(): JournalEntry {
     id: crypto.randomUUID(),
     title: "",
     content: "",
+    color: "gray",
     createdAt: now,
     updatedAt: now,
   };
