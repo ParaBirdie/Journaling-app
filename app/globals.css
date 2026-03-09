@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* Editor textarea */
+.editor-textarea {
+  resize: none;
+  outline: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: #292524;
+  caret-color: #78716c;
+}
+
+.editor-textarea::placeholder {
+  color: #d6d3d1;
+}
+
+/* Markdown prose styles */
+.prose-journal h1 { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 500; color: #1c1917; margin: 0 0 0.75rem; line-height: 1.3; }
+.prose-journal h2 { font-family: 'Lora', serif; font-size: 1.25rem; font-weight: 500; color: #292524; margin: 1.5rem 0 0.5rem; line-height: 1.4; }
+.prose-journal h3 { font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; color: #44403c; margin: 1.25rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.prose-journal p { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.85; color: #292524; margin: 0 0 1rem; }
+.prose-journal ul, .prose-journal ol { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.8; color: #292524; margin: 0 0 1rem; padding-left: 1.5rem; }
+.prose-journal li { margin-bottom: 0.25rem; }
+.prose-journal blockquote { border-left: 3px solid #d6d3d1; padding-left: 1rem; margin: 1.25rem 0; color: #78716c; font-style: italic; font-family: 'Lora', serif; }
+.prose-journal code { font-family: 'JetBrains Mono', monospace; font-size: 0.825rem; background: #f5f5f4; color: #57534e; padding: 0.1rem 0.3rem; border-radius: 3px; }
+.prose-journal pre { background: #f5f5f4; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+.prose-journal pre code { background: none; padding: 0; }
+.prose-journal hr { border: none; border-top: 1px solid #e7e5e4; margin: 2rem 0; }
+.prose-journal a { color: #57534e; text-decoration: underline; text-underline-offset: 2px; }
+.prose-journal strong { font-weight: 600; color: #1c1917; }
+.prose-journal em { font-style: italic; color: #44403c; }
