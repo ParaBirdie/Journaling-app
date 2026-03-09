@@ -1,6 +1,23 @@
-import { JournalEntry } from "@/types";
+import { JournalEntry, ColorCode, Folder } from "@/types";
 
 const STORAGE_KEY = "journal_entries";
+const FOLDERS_STORAGE_KEY = "journal_folders";
+
+export const COLOR_PALETTE: { color: ColorCode; label: string; bg: string; ring: string }[] = [
+  { color: "red", label: "Red", bg: "bg-red-200", ring: "ring-red-400" },
+  { color: "orange", label: "Orange", bg: "bg-orange-200", ring: "ring-orange-400" },
+  { color: "yellow", label: "Yellow", bg: "bg-yellow-200", ring: "ring-yellow-400" },
+  { color: "green", label: "Green", bg: "bg-green-200", ring: "ring-green-400" },
+  { color: "blue", label: "Blue", bg: "bg-blue-200", ring: "ring-blue-400" },
+  { color: "purple", label: "Purple", bg: "bg-purple-200", ring: "ring-purple-400" },
+  { color: "pink", label: "Pink", bg: "bg-pink-200", ring: "ring-pink-400" },
+  { color: "gray", label: "Gray", bg: "bg-gray-200", ring: "ring-gray-400" },
+];
+
+export function getColorClasses(color: ColorCode): { bg: string; ring: string } {
+  const colorDef = COLOR_PALETTE.find((c) => c.color === color);
+  return colorDef ? { bg: colorDef.bg, ring: colorDef.ring } : { bg: "bg-gray-200", ring: "ring-gray-400" };
+}
 
 // Maximum allowed content size per entry (200 KB)
 export const MAX_CONTENT_LENGTH = 200_000;
@@ -58,6 +75,7 @@ export function createEntry(): JournalEntry {
     id: crypto.randomUUID(),
     title: "",
     content: "",
+    color: "gray",
     createdAt: now,
     updatedAt: now,
   };
@@ -84,4 +102,54 @@ export function deriveTitleFromContent(content: string): string {
   const firstLine = content.split("\n")[0].trim();
   // Strip leading markdown heading markers
   return firstLine.replace(/^#{1,6}\s*/, "").slice(0, 60) || "Untitled";
+}
+
+// Folder management functions
+export function loadFolders(): Folder[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(FOLDERS_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as Folder[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveFolders(folders: Folder[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(folders));
+}
+
+export function createFolder(name: string): Folder {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export function deleteFolder(folderId: string): void {
+  const folders = loadFolders();
+  const updated = folders.filter((f) => f.id !== folderId);
+  saveFolders(updated);
+
+  // Move entries from this folder back to root
+  const entries = loadEntries();
+  const updated_entries = entries.map((e) =>
+    e.folderId === folderId ? { ...e, folderId: undefined } : e
+  );
+  saveEntries(updated_entries);
+}
+
+export function renameFolder(folderId: string, newName: string): void {
+  const folders = loadFolders();
+  const updated = folders.map((f) =>
+    f.id === folderId
+      ? { ...f, name: newName, updatedAt: new Date().toISOString() }
+      : f
+  );
+  saveFolders(updated);
 }

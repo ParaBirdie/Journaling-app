@@ -5,15 +5,17 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JournalEntry } from "@/types";
 import { formatDate, formatTime } from "@/lib/storage";
+import ShareButton from "@/components/ShareButton";
 
 interface EditorProps {
   entry: JournalEntry;
   onChange: (content: string) => void;
+  onTitleChange: (title: string) => void;
 }
 
 type ViewMode = "write" | "preview" | "split";
 
-export default function Editor({ entry, onChange }: EditorProps) {
+export default function Editor({ entry, onChange, onTitleChange }: EditorProps) {
   const [mode, setMode] = useState<ViewMode>("split");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -65,7 +67,19 @@ export default function Editor({ entry, onChange }: EditorProps) {
           <span className="text-xs text-stone-300 select-none hidden md:block">
             {formatDate(entry.updatedAt)} at {formatTime(entry.updatedAt)}
           </span>
+          <ShareButton entry={entry} />
         </div>
+      </div>
+
+      {/* Title input */}
+      <div className="px-8 pt-6 pb-2 border-b border-stone-100">
+        <input
+          type="text"
+          value={entry.title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Untitled"
+          className="w-full text-2xl font-semibold text-stone-800 placeholder:text-stone-300 bg-transparent outline-none"
+        />
       </div>
 
       {/* Content area */}
