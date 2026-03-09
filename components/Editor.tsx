@@ -1,44 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JournalEntry } from "@/types";
 import { formatDate, formatTime } from "@/lib/storage";
 import ShareButton from "@/components/ShareButton";
+import RichTextEditor from "@/components/RichTextEditor";
 
 interface EditorProps {
   entry: JournalEntry;
   onChange: (content: string) => void;
-  onTitleChange: (title: string) => void;
 }
 
 type ViewMode = "write" | "preview" | "split";
 
-export default function Editor({ entry, onChange, onTitleChange }: EditorProps) {
+export default function Editor({ entry, onChange }: EditorProps) {
   const [mode, setMode] = useState<ViewMode>("split");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Focus textarea when entry changes and in write/split mode
-  useEffect(() => {
-    if ((mode === "write" || mode === "split") && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [entry.id, mode]);
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      onChange(e.target.value);
-    },
-    [onChange]
-  );
 
   const wordCount = entry.content
     .trim()
+    .replace(/<[^>]*>/g, "") // Remove HTML tags for word count
     .split(/\s+/)
     .filter(Boolean).length;
 
-  const charCount = entry.content.length;
+  const charCount = entry.content.replace(/<[^>]*>/g, "").length;
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0 bg-white">
@@ -76,9 +62,9 @@ export default function Editor({ entry, onChange, onTitleChange }: EditorProps) 
         <input
           type="text"
           value={entry.title}
-          onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Untitled"
           className="w-full text-2xl font-semibold text-stone-800 placeholder:text-stone-300 bg-transparent outline-none"
+          readOnly
         />
       </div>
 
@@ -93,13 +79,10 @@ export default function Editor({ entry, onChange, onTitleChange }: EditorProps) 
                 : "w-full"
             }`}
           >
-            <textarea
-              ref={textareaRef}
-              value={entry.content}
-              onChange={handleChange}
+            <RichTextEditor
+              content={entry.content}
+              onChange={onChange}
               placeholder={`# ${getTodayTitle()}\n\nStart writing…`}
-              className="editor-textarea flex-1 px-8 py-8"
-              spellCheck
             />
           </div>
         )}
@@ -115,7 +98,7 @@ export default function Editor({ entry, onChange, onTitleChange }: EditorProps) 
               {entry.content.trim() ? (
                 <div className="prose-journal">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {entry.content}
+                    {entry.content.replace(/<[^>]*>/g, "")} {/* Strip HTML for preview */}
                   </ReactMarkdown>
                 </div>
               ) : (

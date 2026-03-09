@@ -64,3 +64,50 @@ body {
 .prose-journal a { color: #57534e; text-decoration: underline; text-underline-offset: 2px; }
 .prose-journal strong { font-weight: 600; color: #1c1917; }
 .prose-journal em { font-style: italic; color: #44403c; }
+
+/* Rich text editor */
+.rich-text-editor {
+  font-family: 'Lora', serif;
+  font-size: 1rem;
+  color: #292524;
+  outline: none;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.rich-text-editor:before {
+  content: attr(data-placeholder);
+  position: absolute;
+  color: #d6d3d1;
+  pointer-events: none;
+  display: none;
+}
+
+.rich-text-editor:empty:before {
+  display: block;
+}
+
+.rich-text-editor strong {
+  font-weight: 600;
+  color: #1c1917;
+}
+
+.rich-text-editor em {
+  font-style: italic;
+  color: #44403c;
+}
+
+.rich-text-editor u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-text-editor ul,
+.rich-text-editor ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-editor li {
+  margin-bottom: 0.25rem;
+}
