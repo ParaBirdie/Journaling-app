@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JournalEntry } from "@/types";
 import { formatDate, formatTime } from "@/lib/storage";
+import ShareButton from "@/components/ShareButton";
 
 interface EditorProps {
   entry: JournalEntry;
@@ -65,6 +66,7 @@ export default function Editor({ entry, onChange }: EditorProps) {
           <span className="text-xs text-stone-300 select-none hidden md:block">
             {formatDate(entry.updatedAt)} at {formatTime(entry.updatedAt)}
           </span>
+          <ShareButton entry={entry} />
         </div>
       </div>
 
